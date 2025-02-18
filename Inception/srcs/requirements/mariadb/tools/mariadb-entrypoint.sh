@@ -5,8 +5,8 @@ set -e #exit if a command fails
 if [ ! -e /etc/.firstrun ]; then #checks if file exists
     cat  << EOF >> /etc/my.cnf.d/mariadb-server.cnf
 [mysqld] 
-bind-address = 0.0.0.0
-skip-networking = 0
+bind-address=0.0.0.0
+skip-networking=0
 EOF
     touch /etc/.firstrun
 fi

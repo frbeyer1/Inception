@@ -5,6 +5,6 @@ RUN apk update && \
 
 COPY tools/mariadb-entrypoint.sh /usr/local/bin/
 
-RUN chmmdo +x /usr/local/bin/mariadb-entrypoint.sh
+RUN chmod +x /usr/local/bin/mariadb-entrypoint.sh
 
 ENTRYPOINT ["mariadb-entrypoint.sh"]

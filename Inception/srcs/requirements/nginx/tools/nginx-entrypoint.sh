@@ -2,19 +2,15 @@
 set -e
 
 if [ ! -e /etc/.firstrun ]; then
-    openssl req \
-    -x509 \
-    -days 365 \
-    -newkey rsa:2048 \
-    -nodes \
-    -out /etc/nginx/ssl/cert.crt \
-    -keyout /etc/nginx/ssl/cert.key \
+    openssl req -x509 -days 365 -newkey rsa:2048 -nodes \
+    -out '/etc/nginx/ssl/cert.crt' \
+    -keyout '/etc/nginx/ssl/cert.key' \
     -subj "/CN=$DOMAIN_NAME" \
     >/dev/null 2>/dev/null #suppress output
 
     #-nodes ensures that the private key is not encrypted with a passphrase
 
-    cat << EOF > /etc/nginx/conf.d/default.conf
+    cat << EOF >> /etc/nginx/http.d/default.conf
 
 server {
     listen 443 ssl http2;\
@@ -40,7 +36,7 @@ server {
         fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME \$document_root\$fastcgi_script_name;
         fastcgi_param PATH_INFO \$fastcgi_path_info;
-        fastcgi_split_path_info ^(.+?\.php)(/.*)\$;
+        fastcgi_split_path_info ^(.+\.php)(/.*)\$;
         include fastcgi_params;
     }
 }
