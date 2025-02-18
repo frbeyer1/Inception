@@ -22,10 +22,10 @@ if [ ! -e /var/lib/mysql/.firstmount ]; then
     # wait for mariadb to start, then setup database and accounts
     mysqladmin ping -u root --silent --wait >/dev/null 2>/dev/null
     cat << EOF | mysql --protocol=socket -u root -p=
-CREATE DATABASE &MYSQL_DATABASE;
-CREATE USER '&MYSQL_USER'@'%' IDENTIFIED BY '&MYSQL_PASSWORD';
-GRANT ALL PRIVILEGES ON &MYSQL_DATABASE.* TO '&MYSQL_USER'@'%';
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' INDENTIFIED BY '@MYSQL_ROOT_PASSWORD';
+CREATE DATABASE $MYSQL_DATABASE;
+CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' INDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
 FLUSH PRIVILEGES;
 EOF
     #stop temporary server and mark volume as initialized
