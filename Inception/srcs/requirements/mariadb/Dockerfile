@@ -1,7 +1,10 @@
-FROM alpine:3.19.2
+FROM ubuntu:22.04
 
-RUN apk update && \
-    apk add mariadb mariadb-client bash
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y mariadb-server mariadb-client bash && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY tools/mariadb-entrypoint.sh /usr/local/bin/
 

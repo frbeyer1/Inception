@@ -1,5 +1,6 @@
-services:
+version: '3.8'
 
+services:
   mariadb:
     container_name: mariadb
     init: true
@@ -9,8 +10,6 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
-    env_file:
-      - .env
     build: requirements/mariadb
     volumes:
       - mariadb:/var/lib/mysql
@@ -18,26 +17,6 @@ services:
       - docker-network
     image: mariadb
 
-  nginx:
-    container_name: nginx
-    ports:
-      - "443:443"
-    init: true
-    restart: always
-    environment:
-      - DOMAIN_NAME=${DOMAIN_NAME}
-    env_file:
-      - .env
-    build: requirements/nginx
-    volumes:
-      - wordpress:/var/lib/mysql
-    networks:
-      - docker-network
-    depends_on:
-      - wordpress
-      - mariadb
-    image: nginx
-  
   wordpress:
     container_name: wordpress
     init: true
@@ -59,7 +38,25 @@ services:
       - wordpress:/var/www/html
     depends_on:
       - mariadb
-  
+
+  nginx:
+    container_name: nginx
+    ports:
+      - "443:443"
+    init: true
+    restart: always
+    environment:
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    build: requirements/nginx
+    volumes:
+      - wordpress:/var/www/html
+    networks:
+      - docker-network
+    depends_on:
+      - wordpress
+      - mariadb
+    image: nginx
+
 networks:
   docker-network:
     name: docker-network

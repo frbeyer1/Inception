@@ -1,36 +1,53 @@
 #!/bin/bash
-set -e #exit if a command fails
+set -e
 
-#configure server to be reacheable by other containers on fist run
-if [ ! -e /etc/.firstrun ]; then #checks if file exists
-    cat  << EOF >> /etc/my.cnf.d/mariadb-server.cnf
-[mysqld] 
-bind-address=0.0.0.0
-skip-networking=0
-EOF
+# First run config to bind on 0.0.0.0
+if [ ! -e /etc/.firstrun ]; then
+    echo "[mysqld]" >> /etc/mysql/mariadb.conf.d/50-server.cnf
+    echo "bind-address = 0.0.0.0" >> /etc/mysql/mariadb.conf.d/50-server.cnf
+    echo "skip-networking = 0" >> /etc/mysql/mariadb.conf.d/50-server.cnf
     touch /etc/.firstrun
 fi
 
-#mount volume and create database
+# Ensure required dirs exist
+mkdir -p /run/mysqld
+chown -R mysql:mysql /run/mysqld
+
+# Initialize DB if first mount
 if [ ! -e /var/lib/mysql/.firstmount ]; then
-    # initialize database on volume and start mariadb in background
-    mysql_install_db --datadir=/var/lib/mysql --skip-test-db --user=mysql --group=mysql \
-        --auth-root-authentication-method=socket > /dev/null 2>/dev/null
+    echo "Initializing database..."
+    # Start the MariaDB server in the background
     mysqld_safe &
     mysqld_pid=$!
 
-    # wait for mariadb to start, then setup database and accounts
-    mysqladmin ping -u root --silent --wait >/dev/null 2>/dev/null
-    cat << EOF | mysql --protocol=socket -u root -p=
-CREATE DATABASE $MYSQL_DATABASE;
-CREATE USER '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
-GRANT ALL PRIVILEGES ON $MYSQL_DATABASE.* TO '$MYSQL_USER'@'%';
-GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' INDENTIFIED BY '$MYSQL_ROOT_PASSWORD';
+    echo "Waiting for MariaDB to be ready..."
+    until mysqladmin ping --silent; do
+        sleep 1
+    done
+
+    # Force mysql_upgrade to run with --force
+    mysql_upgrade --user=root --password=${MYSQL_ROOT_PASSWORD} --force
+
+    echo "Starting MariaDB in the background..."
+    mysqld_safe &
+    mysqld_pid=$!
+
+    echo "Setting up database and user..."
+    cat << EOF | mysql --protocol=socket -u root --password=${MYSQL_ROOT_PASSWORD}
+CREATE DATABASE IF NOT EXISTS \`$MYSQL_DATABASE\`;
+CREATE USER IF NOT EXISTS '$MYSQL_USER'@'%' IDENTIFIED BY '$MYSQL_PASSWORD';
+GRANT ALL PRIVILEGES ON \`$MYSQL_DATABASE\`.* TO '$MYSQL_USER'@'%';
+ALTER USER 'root'@'localhost' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}'; 
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '${MYSQL_ROOT_PASSWORD}' WITH GRANT OPTION;
+UPDATE mysql.user SET host='%' WHERE user='root';
 FLUSH PRIVILEGES;
 EOF
-    #stop temporary server and mark volume as initialized
+
+    echo "Shutting down temporary server..."
     mysqladmin shutdown
+
     touch /var/lib/mysql/.firstmount
 fi
 
+# Start the server in foreground
 exec mysqld_safe
