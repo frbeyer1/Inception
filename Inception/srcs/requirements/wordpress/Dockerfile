@@ -23,8 +23,12 @@ RUN apt-get install -y \
 RUN curl -o /usr/local/bin/wp -L https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
     chmod +x /usr/local/bin/wp
 
+# Create the necessary directories for PHP-FPM
+RUN mkdir -p /run/php && chown -R www-data:www-data /run/php
+
 # Copy entrypoint
 COPY tools/wordpress-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/wordpress-entrypoint.sh
 
-ENTRYPOINT ["wordpress-entrypoint.sh"]
+# Run PHP-FPM in foreground, then WordPress entrypoint
+ENTRYPOINT ["/bin/sh", "-c", "php-fpm8.2 -F & /usr/local/bin/wordpress-entrypoint.sh"]
