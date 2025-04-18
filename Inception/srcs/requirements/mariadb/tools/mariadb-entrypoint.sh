@@ -10,8 +10,8 @@ if [ ! -e /etc/.firstrun ]; then
 fi
 
 # Ensure required dirs exist
-mkdir -p /run/mysqld
-chown -R mysql:mysql /run/mysqld
+mkdir -p /var/run/mysqld
+chown -R mysql:mysql /var/run/mysqld
 
 # Initialize DB if first mount
 if [ ! -e /var/lib/mysql/.firstmount ]; then
@@ -19,9 +19,9 @@ if [ ! -e /var/lib/mysql/.firstmount ]; then
     # Start the MariaDB server in the background
     mysqld_safe &
     mysqld_pid=$!
-
+z
     echo "Waiting for MariaDB to be ready..."
-    until mysqladmin ping --silent; do
+    until mysqladmin ping --silent --protocol=tcp --host=127.0.0.1; do
         sleep 1
     done
 

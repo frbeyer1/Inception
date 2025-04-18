@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM debian:bullseye
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,4 +10,3 @@ COPY tools/mariadb-entrypoint.sh /usr/local/bin/
 
 RUN chmod +x /usr/local/bin/mariadb-entrypoint.sh
 
-ENTRYPOINT ["mariadb-entrypoint.sh"]
