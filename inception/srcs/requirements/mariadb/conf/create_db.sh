@@ -1,20 +1,25 @@
-#!bin/sh
+#!/bin/sh
 
+#Check if MySQL system database exists
 if [ ! -d "/var/lib/mysql/mysql" ]; then
 
+        #Set ownership
         chown -R mysql:mysql /var/lib/mysql
 
-        # init database
+        #Init database
         mysql_install_db --basedir=/usr --datadir=/var/lib/mysql --user=mysql --rpm
 
+        #Checks if a temp file can be created; if not, exits with error
         tfile=`mktemp`
         if [ ! -f "$tfile" ]; then
                 return 1
         fi
 fi
 
+#Check if WordPress database exists
 if [ ! -d "/var/lib/mysql/wordpress" ]; then
 
+        #Create SQL file
         cat << EOF > /tmp/create_db.sql
 USE mysql;
 FLUSH PRIVILEGES;
@@ -28,7 +33,7 @@ CREATE USER '${DB_USER}'@'%' IDENTIFIED by '${DB_PASS}';
 GRANT ALL PRIVILEGES ON wordpress.* TO '${DB_USER}'@'%';
 FLUSH PRIVILEGES;
 EOF
-        # run init.sql
+        #Starts MariaDB in bootstrap mode to execute the SQL, then deletes the SQL file
         /usr/bin/mysqld --user=mysql --bootstrap < /tmp/create_db.sql
         rm -f /tmp/create_db.sql
 fi
