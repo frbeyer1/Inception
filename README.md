@@ -51,23 +51,23 @@ paste in:
 ```
 make build
 ```
-Stop the containers:
+5. Stop the containers:
 ```
 make down
 ```
-Launch the containers:
+6. Launch the containers:
 ```
 make
 ```
-Stop and reaunch the containers:
+7. Stop and reaunch the containers:
 ```
 make re
 ```
-Remove all containers and unused Docker data (partial)
+8. Remove all containers and unused Docker data (partial)
 ```
 make clean
 ```
-Forces deep cleanup of docker data, removes volumes and local data
+9. Forces deep cleanup of docker data, removes volumes and local data
 ```
 make fclean
 ```
